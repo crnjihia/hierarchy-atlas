@@ -23,6 +23,15 @@ jobs:
       - name: Start PostgreSQL Stack
         run: docker compose up -d --wait
 
+      - name: Wait for Complete Database Migrations
+        run: |
+          echo "Waiting for all 4 migrations to complete..."
+          timeout 60 bash -c 'until docker compose exec -T db psql -U dev -d hierarchy_atlas -c "SELECT 1 FROM regions WHERE path IS NOT NULL LIMIT 1;" > /dev/null 2>&1; do
+            echo "Waiting for path column..."
+            sleep 2
+          done'
+          echo "Migrations verified."
+
       - name: Verify Migrations & Hierarchy Population
         run: |
           docker compose exec -T db psql -U dev -d hierarchy_atlas -c "SELECT level, count(*) FROM regions GROUP BY level ORDER BY min(id);"

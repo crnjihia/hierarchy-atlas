@@ -14,10 +14,11 @@ services:
       - ./sql:/docker-entrypoint-initdb.d:ro
       - ./benchmarks:/benchmarks:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev -d hierarchy_atlas"]
-      interval: 3s
+      test: ["CMD-SHELL", "psql -U dev -d hierarchy_atlas -c 'SELECT 1 FROM regions WHERE path IS NOT NULL LIMIT 1;' > /dev/null 2>&1"]
+      interval: 2s
       timeout: 3s
-      retries: 10
+      retries: 30
+      start_period: 5s
 
 volumes:
   db_data:

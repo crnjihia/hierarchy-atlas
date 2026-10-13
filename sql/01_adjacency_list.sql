@@ -117,3 +117,85 @@ BEGIN
         END LOOP;
     END LOOP;
 END $$;
+
+-- 3. Recursive CTE Subtree Fetch Query & Views
+-- Subtree Fetch: Given a root region id, recursively returns all its descendants
+CREATE OR REPLACE FUNCTION get_subtree_adj(p_root_id INTEGER)
+RETURNS TABLE (
+    id INTEGER,
+    name TEXT,
+    level TEXT,
+    code TEXT,
+    parent_id INTEGER,
+    depth INTEGER
+) LANGUAGE sql STABLE AS $$
+    WITH RECURSIVE subtree AS (
+        SELECT r.id, r.name, r.level, r.code, r.parent_id, 0 AS depth
+        FROM regions r
+        WHERE r.id = p_root_id
+        UNION ALL
+        SELECT c.id, c.name, c.level, c.code, c.parent_id, s.depth + 1
+        FROM regions c
+        JOIN subtree s ON c.parent_id = s.id
+    )
+    SELECT * FROM subtree;
+$$;
+
+-- Subtree Fetch by Region Name
+CREATE OR REPLACE FUNCTION get_subtree_adj_by_name(p_name TEXT)
+RETURNS TABLE (
+    id INTEGER,
+    name TEXT,
+    level TEXT,
+    code TEXT,
+    parent_id INTEGER,
+    depth INTEGER
+) LANGUAGE sql STABLE AS $$
+    WITH RECURSIVE subtree AS (
+        SELECT r.id, r.name, r.level, r.code, r.parent_id, 0 AS depth
+        FROM regions r
+        WHERE r.name = p_name
+        UNION ALL
+        SELECT c.id, c.name, c.level, c.code, c.parent_id, s.depth + 1
+        FROM regions c
+        JOIN subtree s ON c.parent_id = s.id
+    )
+    SELECT * FROM subtree;
+$$;
+
+-- Ancestor Lookup: Given a node id, recursively climbs the parent chain to the root
+CREATE OR REPLACE FUNCTION get_ancestors_adj(p_node_id INTEGER)
+RETURNS TABLE (
+    id INTEGER,
+    name TEXT,
+    level TEXT,
+    code TEXT,
+    parent_id INTEGER,
+    depth INTEGER
+) LANGUAGE sql STABLE AS $$
+    WITH RECURSIVE ancestors AS (
+        SELECT r.id, r.name, r.level, r.code, r.parent_id, 0 AS depth
+        FROM regions r
+        WHERE r.id = p_node_id
+        UNION ALL
+        SELECT p.id, p.name, p.level, p.code, p.parent_id, a.depth + 1
+        FROM regions p
+        JOIN ancestors a ON p.id = a.parent_id
+    )
+    SELECT * FROM ancestors;
+$$;
+
+-- View: Pre-defined subtree view for Nairobi county
+CREATE OR REPLACE VIEW regions_adj_nairobi_subtree AS
+SELECT * FROM get_subtree_adj_by_name('Nairobi');
+
+-- Move Subtree Write Operation in Adjacency List:
+-- An O(1) single-row update that reparents an entire sub-hierarchy
+CREATE OR REPLACE PROCEDURE move_subtree_adj(p_node_id INTEGER, p_new_parent_id INTEGER)
+LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE regions
+    SET parent_id = p_new_parent_id
+    WHERE id = p_node_id;
+END;
+$$;

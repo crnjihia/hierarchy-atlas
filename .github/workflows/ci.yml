@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-benchmark:
+    name: Verify Migrations and Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Start PostgreSQL Stack
+        run: docker compose up -d --wait
+
+      - name: Verify Migrations & Hierarchy Population
+        run: |
+          docker compose exec -T db psql -U dev -d hierarchy_atlas -c "SELECT level, count(*) FROM regions GROUP BY level ORDER BY min(id);"
+          docker compose exec -T db psql -U dev -d hierarchy_atlas -c "SELECT count(*) FROM region_closure;"
+          docker compose exec -T db psql -U dev -d hierarchy_atlas -c "SELECT id, name, lft, rgt, path FROM regions WHERE name = 'Nairobi';"
+
+      - name: Run Hierarchy Atlas pgbench Suite
+        run: python benchmarks/run_benchmarks.py
+
+      - name: Tear Down Stack
+        if: always()
+        run: docker compose down -v

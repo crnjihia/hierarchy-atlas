@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hierarchy_atlas_db
+    restart: always
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: hierarchy_atlas
+    ports:
+      - "${PGPORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+      - ./benchmarks:/benchmarks:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d hierarchy_atlas"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db_data:

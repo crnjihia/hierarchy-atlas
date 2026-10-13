@@ -1,0 +1,20 @@
+# PostgreSQL temporary data and WAL logs
+pg_wal/
+*.log
+
+# Large datasets & generated data
+*.csv.gz
+*.csv.tar.gz
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Benchmark artifacts & temp files
+benchmarks/results/
+*.tmp
+
+# Environment variables & secrets
+.env

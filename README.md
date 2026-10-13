@@ -1,15 +1,53 @@
 # Hierarchy Atlas
 
-Production-grade hierarchical data modeling and benchmarking suite in PostgreSQL 16, modeling **Kenya's administrative geography**:
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Benchmark](https://img.shields.io/badge/pgbench-Verified-success.svg)](benchmarks/)
+
+A production-grade PostgreSQL 16 reference implementation modeling **Kenya's administrative geography**:
 
 $$\text{Country (Kenya)} \longrightarrow \text{47 Counties (KNBS)} \longrightarrow \text{235 Sub-Counties} \longrightarrow \text{1,175 Wards} \longrightarrow \text{4,700 Villages}$$
 
-The dataset comprises **6,158 total nodes** across 5 hierarchical levels. This repository implements, verifies, and empirically benchmarks the four classic hierarchical modeling patterns on the exact same dataset:
+The dataset comprises **6,158 total nodes** across 5 depth levels. This repository implements, verifies, and empirically benchmarks the four classic hierarchical modeling patterns on the exact same dataset:
 
 1. **Adjacency List** — Recursive Common Table Expression (CTE) traversal.
 2. **Nested Sets** — Depth-first tree intervals (`lft`/`rgt` bounds) for $O(1)$ subtree reads.
 3. **Closure Table** — Dedicated `region_closure` transitive path table for join-based lookups.
 4. **ltree** — Native PostgreSQL GiST-indexed materialized label path extension.
+
+---
+
+## Entity Relationship Diagram (DBeaver)
+
+![DBeaver Schema and ER Diagram](docs/images/dbeaver_erd.png)
+
+*Figure 1: Physical database schema visualized in DBeaver showing `regions` (with adjacency, nested sets bounds, and ltree path), the `region_closure` transitive relationship table, and the `regions_adj_nairobi_subtree` view.*
+
+---
+
+## Hierarchy Architecture & Dataset
+
+The administrative geography is deterministically seeded from official **Kenya National Bureau of Statistics (KNBS)** codes (`01 Baringo` to `47 Wajir`):
+
+```
+                                [Kenya] (Country, Code: KE)
+                                   │
+      ┌────────────────────────────┼────────────────────────────┐
+      ▼                            ▼                            ▼
+[01 Baringo]                 [30 Nairobi]                  [47 Wajir]  (47 Counties)
+      │                            │                            │
+  (5 Sub-Counties)             (5 Sub-Counties)             (5 Sub-Counties) (235 Total)
+      │                            │                            │
+   (5 Wards)                    (5 Wards)                    (5 Wards)       (1,175 Total)
+      │                            │                            │
+  (4 Villages)                 (4 Villages)                 (4 Villages)     (4,700 Total)
+```
+
+- **Total Nodes**: 6,158 regions.
+- **Tree Depth**: 5 levels (Country = 0, County = 1, Sub-County = 2, Ward = 3, Village = 4).
+- **Closure Table Pairs**: 29,000 transitive ancestor-descendant paths.
+- **Sample County Subtree (Nairobi)**: Exactly 131 descendant nodes (1 County + 5 Sub-Counties + 25 Wards + 100 Villages).
 
 ---
 
@@ -19,19 +57,23 @@ The dataset comprises **6,158 total nodes** across 5 hierarchical levels. This r
 hierarchy-atlas/
 ├── docker-compose.yml              # PostgreSQL 16 container with automated initdb migrations
 ├── sql/
-│   ├── 01_adjacency_list.sql       # Base schema, KNBS county seed, 6,158 regions, CTE functions
+│   ├── 01_adjacency_list.sql       # Base schema, KNBS county seed (6,158 nodes), CTE functions & views
 │   ├── 02_nested_sets.sql          # lft/rgt bounds, DFS bound builder, interval queries, bound shifts
-│   ├── 03_closure_table.sql        # region_closure table, transitive paths, join functions
+│   ├── 03_closure_table.sql        # region_closure table (29k rows), transitive paths, join functions
 │   └── 04_ltree.sql                # ltree extension, path column, GiST index, subpath updates
 ├── benchmarks/
 │   ├── subtree_fetch.sql           # Subtree read benchmark suite
 │   ├── ancestor_lookup.sql         # Ancestor traversal benchmark suite
 │   ├── move_subtree.sql            # Subtree reparenting write benchmark suite
-│   ├── run_benchmarks.py           # Automated pgbench execution harness
+│   ├── run_benchmarks.py           # Automated pgbench test harness & metric collector
 │   └── *.sql                       # Dedicated per-model benchmark scripts
 ├── data/
-│   └── knbs_counties.csv           # Kenya National Bureau of Statistics (KNBS) 47 county codes & names
+│   └── knbs_counties.csv           # KNBS 47 county codes & names (codes 01 to 47)
+├── docs/
+│   └── images/
+│       └── dbeaver_erd.png         # DBeaver Entity-Relationship diagram screenshot
 ├── run_benchmarks.sh               # Shell runner for Docker initialization and benchmarks
+├── LICENSE                         # MIT License
 └── README.md                       # Architecture analysis, benchmarks, and trade-off guide
 ```
 
@@ -90,7 +132,7 @@ JOIN regions c ON c.lft BETWEEN root.lft AND root.rgt
 WHERE root.name = 'Nairobi';
 ```
 
-**Write Write-Amplification (Bound Shifting):**
+**Write Amplification (Bound Shifting):**
 Reparenting or inserting a node requires shifting `lft` and `rgt` across all subsequent tree nodes to open or close intervals:
 ```sql
 -- Procedure: move_subtree_nested(node_id, new_parent_id)
@@ -168,16 +210,16 @@ Empirical benchmarks run on PostgreSQL 16 via `pgbench` with 10 concurrent clien
 
 | Model | Subtree Read TPS | Subtree Read Latency | Ancestor Lookup TPS | Ancestor Lookup Latency | Move Subtree Write TPS | Move Subtree Write Latency | Storage Overhead | Query Complexity |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Adjacency List** | 2,969.26 | 3.368 ms | 4,901.68 | 2.040 ms | **724.71** | **6.899 ms** | **Baseline (0 kB)** | Medium (`WITH RECURSIVE`) |
-| **Nested Sets** | 3,793.73 | 2.636 ms | 4,189.83 | 2.387 ms | 1.17 | 4,261.696 ms | +384 kB (+6%) | Low (`BETWEEN lft AND rgt`) |
-| **Closure Table** | 2,681.34 | 3.729 ms | 3,935.96 | 2.541 ms | 251.06 | 19.915 ms | **+3,624 kB (+60%)** | Low (`JOIN region_closure`) |
-| **ltree** | **4,418.75** | **2.263 ms** | **7,527.11** | **1.329 ms** | 2.56 | 1,494.339 ms | +1,152 kB (+19%) | **Very Low** (`path <@ pattern`) |
+| **Adjacency List** | 2,532.63 | 3.948 ms | 4,684.64 | 2.135 ms | **684.86** | **7.301 ms** | **Baseline (0 kB)** | Medium (`WITH RECURSIVE`) |
+| **Nested Sets** | 3,672.41 | 2.723 ms | 4,096.61 | 2.441 ms | 1.22 | 4,107.648 ms | +384 kB (+6%) | Low (`BETWEEN lft AND rgt`) |
+| **Closure Table** | 2,654.32 | 3.767 ms | 4,211.45 | 2.374 ms | 249.80 | 20.016 ms | **+3,624 kB (+60%)** | Low (`JOIN region_closure`) |
+| **ltree** | **4,387.90** | **2.279 ms** | **7,278.00** | **1.374 ms** | 20.74 | 230.802 ms | +1,152 kB (+19%) | **Very Low** (`path <@ pattern`) |
 
 ### Key Observations
-1. **Subtree Read Champion (`ltree`)**: `ltree` delivers **4,418.75 TPS** (2.26 ms latency), beating Adjacency List by +49% in throughput due to GiST index pruning.
-2. **Ancestor Lookup Champion (`ltree`)**: At **7,527.11 TPS** (1.33 ms latency), `ltree` is ~53% faster than Adjacency List and ~91% faster than Closure Table.
-3. **Write Anomaly in Nested Sets**: While Nested Sets delivers fast reads (3,793.73 TPS), write reparenting collapses to **1.17 TPS (4.26 seconds latency)** due to global table-locking boundary shifts across 6,158 rows.
-4. **Write Champion (Adjacency List)**: Adjacency list achieves **724.71 TPS** (6.89 ms latency) for subtree moves, outperforming Nested Sets by **>600x**.
+1. **Subtree Read Champion (`ltree`)**: `ltree` delivers **4,387.90 TPS** (2.28 ms latency), beating Adjacency List by +73% in throughput due to GiST index pruning.
+2. **Ancestor Lookup Champion (`ltree`)**: At **7,278.00 TPS** (1.37 ms latency), `ltree` is ~55% faster than Adjacency List and ~72% faster than Closure Table.
+3. **Write Anomaly in Nested Sets**: While Nested Sets delivers fast reads (3,672.41 TPS), write reparenting collapses to **1.22 TPS (4.10 seconds latency)** due to global table-locking boundary shifts across 6,158 rows.
+4. **Write Champion (Adjacency List)**: Adjacency list achieves **684.86 TPS** (7.30 ms latency) for subtree moves, outperforming Nested Sets by **>560x**.
 5. **Storage Footprint**: Closure table incurs massive storage bloat (+3.62 MB for 29,000 path rows), consuming 60% of total database footprint for this hierarchy.
 
 ---
@@ -246,13 +288,25 @@ Run the entire stack from a clean checkout:
 
 ```bash
 # 1. Start PostgreSQL (runs all 4 migrations and populates 6,158 regions on initdb)
-docker compose up -d
+docker compose up -d --wait
 
 # 2. Verify health and node count
 docker compose exec -T db psql -U dev -d hierarchy_atlas -c "SELECT level, count(*) FROM regions GROUP BY level ORDER BY min(id);"
 ```
 
-### 4.2 Exact `pgbench -f` Commands
+### 4.2 Connecting with DBeaver / pgAdmin
+
+The database exposes host port **`5433`** (avoiding collisions with any local PostgreSQL service on default 5432):
+
+| Parameter | Value |
+| :--- | :--- |
+| **Host** | `localhost` *(or `127.0.0.1`)* |
+| **Port** | `5433` |
+| **Database** | `hierarchy_atlas` |
+| **Username** | `dev` |
+| **Password** | `dev` |
+
+### 4.3 Exact `pgbench -f` Commands
 
 Execute isolated benchmarks against any model:
 
@@ -298,14 +352,14 @@ python benchmarks/run_benchmarks.py
 ## 5. Architectural Conclusions & Trade-Off Analysis
 
 ### When to choose **`ltree`**:
-- **Best for Read-Dominant Workloads:** Highest throughput for both subtree fetching (4,418 TPS) and ancestor lookups (7,527 TPS).
+- **Best for Read-Dominant Workloads:** Highest throughput for both subtree fetching (4,388 TPS) and ancestor lookups (7,278 TPS).
 - **Complex Pattern Matching:** Native support for wildcards (`Kenya.*.Ward_1`), level queries (`nlevel(path) = 3`), and lquery regexes.
 - **Moderate Updates:** Subtree moves are manageable for moderate transaction volumes where paths can be cascaded.
 
 ### When to choose **Adjacency List**:
-- **Best for Write-Heavy Workloads:** Highest write throughput (724 TPS). Subtree reparenting is a single $O(1)$ foreign key update without locking sibling branches.
+- **Best for Write-Heavy Workloads:** Highest write throughput (685 TPS). Subtree reparenting is a single $O(1)$ foreign key update without locking sibling branches.
 - **Simplicity & Standard Compliance:** Zero proprietary extensions or auxiliary tables; simple schema and trivial referential integrity (`ON DELETE CASCADE`).
-- **Ideal for Shallow Hierarchies:** When trees are less than 10 levels deep, recursive CTEs remain sufficiently fast for interactive user applications.
+- **Ideal for Shallow Hierarchies:** When trees are less than 10 levels deep, recursive CTEs remain fast for interactive user applications.
 
 ### When to choose **Closure Table**:
 - **Arbitrary Graph / Multiple Parents:** Ideal when models evolve into Directed Acyclic Graphs (DAGs) where an entity can have multiple parents.
@@ -314,3 +368,9 @@ python benchmarks/run_benchmarks.py
 
 ### When to choose **Nested Sets**:
 - **Static Hierarchies Only:** Read queries are elegant range scans with very few buffer hits, but write amplification renders it unsuitable for write-heavy or concurrent write production workloads.
+
+---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

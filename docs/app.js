@@ -5,53 +5,53 @@
 
 // KNBS 47 Counties Data (Official Codes and Names)
 const COUNTIES = [
-  { code: '01', name: 'Baringo' },
-  { code: '02', name: 'Bomet' },
-  { code: '03', name: 'Bungoma' },
-  { code: '04', name: 'Busia' },
-  { code: '05', name: 'Elgeyo-Marakwet' },
-  { code: '06', name: 'Embu' },
+  { code: '01', name: 'Mombasa' },
+  { code: '02', name: 'Kwale' },
+  { code: '03', name: 'Kilifi' },
+  { code: '04', name: 'Tana River' },
+  { code: '05', name: 'Lamu' },
+  { code: '06', name: 'Taita-Taveta' },
   { code: '07', name: 'Garissa' },
-  { code: '08', name: 'Homa Bay' },
-  { code: '09', name: 'Isiolo' },
-  { code: '10', name: 'Kajiado' },
-  { code: '11', name: 'Kakamega' },
-  { code: '12', name: 'Kericho' },
-  { code: '13', name: 'Kiambu' },
-  { code: '14', name: 'Kilifi' },
-  { code: '15', name: 'Kirinyaga' },
-  { code: '16', name: 'Kisii' },
-  { code: '17', name: 'Kisumu' },
-  { code: '18', name: 'Kitui' },
-  { code: '19', name: 'Kwale' },
-  { code: '20', name: 'Laikipia' },
-  { code: '21', name: 'Lamu' },
-  { code: '22', name: 'Machakos' },
-  { code: '23', name: 'Makueni' },
-  { code: '24', name: 'Mandera' },
-  { code: '25', name: 'Marsabit' },
-  { code: '26', name: 'Meru' },
-  { code: '27', name: 'Migori' },
-  { code: '28', name: 'Mombasa' },
-  { code: '29', name: "Murang'a" },
-  { code: '30', name: 'Nairobi' },
-  { code: '31', name: 'Nakuru' },
-  { code: '32', name: 'Nandi' },
+  { code: '08', name: 'Wajir' },
+  { code: '09', name: 'Mandera' },
+  { code: '10', name: 'Marsabit' },
+  { code: '11', name: 'Isiolo' },
+  { code: '12', name: 'Meru' },
+  { code: '13', name: 'Tharaka-Nithi' },
+  { code: '14', name: 'Embu' },
+  { code: '15', name: 'Kitui' },
+  { code: '16', name: 'Machakos' },
+  { code: '17', name: 'Makueni' },
+  { code: '18', name: 'Nyandarua' },
+  { code: '19', name: 'Nyeri' },
+  { code: '20', name: 'Kirinyaga' },
+  { code: '21', name: "Murang'a" },
+  { code: '22', name: 'Kiambu' },
+  { code: '23', name: 'Turkana' },
+  { code: '24', name: 'West Pokot' },
+  { code: '25', name: 'Samburu' },
+  { code: '26', name: 'Trans Nzoia' },
+  { code: '27', name: 'Uasin Gishu' },
+  { code: '28', name: 'Elgeyo-Marakwet' },
+  { code: '29', name: 'Nandi' },
+  { code: '30', name: 'Baringo' },
+  { code: '31', name: 'Laikipia' },
+  { code: '32', name: 'Nakuru' },
   { code: '33', name: 'Narok' },
-  { code: '34', name: 'Nyamira' },
-  { code: '35', name: 'Nyandarua' },
-  { code: '36', name: 'Nyeri' },
-  { code: '37', name: 'Samburu' },
-  { code: '38', name: 'Siaya' },
-  { code: '39', name: 'Taita-Taveta' },
-  { code: '40', name: 'Tana River' },
-  { code: '41', name: 'Tharaka-Nithi' },
-  { code: '42', name: 'Trans Nzoia' },
-  { code: '43', name: 'Turkana' },
-  { code: '44', name: 'Uasin Gishu' },
-  { code: '45', name: 'Vihiga' },
-  { code: '46', name: 'West Pokot' },
-  { code: '47', name: 'Wajir' }
+  { code: '34', name: 'Kajiado' },
+  { code: '35', name: 'Kericho' },
+  { code: '36', name: 'Bomet' },
+  { code: '37', name: 'Kakamega' },
+  { code: '38', name: 'Vihiga' },
+  { code: '39', name: 'Bungoma' },
+  { code: '40', name: 'Busia' },
+  { code: '41', name: 'Siaya' },
+  { code: '42', name: 'Kisumu' },
+  { code: '43', name: 'Homa Bay' },
+  { code: '44', name: 'Migori' },
+  { code: '45', name: 'Kisii' },
+  { code: '46', name: 'Nyamira' },
+  { code: '47', name: 'Nairobi' }
 ];
 
 // Benchmark Metrics Dataset (Empirical pgbench on PostgreSQL 16)
@@ -186,7 +186,7 @@ const SIM_SCENARIOS = {
 };
 
 // Current Selected Tree State
-let currentCountyCode = '30'; // Default Nairobi
+let currentCountyCode = '47'; // Default Nairobi (Official KNBS code 47)
 let selectedNodeData = null;
 
 // Initialize on DOM Loaded
@@ -221,7 +221,7 @@ function initCountyDropdown() {
 
 // 2. Deterministic Node Calculation for Selected County
 function getCountyHierarchy(countyCode) {
-  const county = COUNTIES.find(c => c.code === countyCode) || COUNTIES[29]; // Default Nairobi
+  const county = COUNTIES.find(c => c.code === countyCode) || COUNTIES[46]; // Default Nairobi (code 47)
   const countyIdx = parseInt(county.code, 10);
   
   // Base IDs and bounds for deterministic demonstration

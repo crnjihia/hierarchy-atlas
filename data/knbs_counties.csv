@@ -1,48 +1,48 @@
 county_code,county_name
-01,Baringo
-02,Bomet
-03,Bungoma
-04,Busia
-05,Elgeyo-Marakwet
-06,Embu
+01,Mombasa
+02,Kwale
+03,Kilifi
+04,Tana River
+05,Lamu
+06,Taita-Taveta
 07,Garissa
-08,Homa Bay
-09,Isiolo
-10,Kajiado
-11,Kakamega
-12,Kericho
-13,Kiambu
-14,Kilifi
-15,Kirinyaga
-16,Kisii
-17,Kisumu
-18,Kitui
-19,Kwale
-20,Laikipia
-21,Lamu
-22,Machakos
-23,Makueni
-24,Mandera
-25,Marsabit
-26,Meru
-27,Migori
-28,Mombasa
-29,Murang'a
-30,Nairobi
-31,Nakuru
-32,Nandi
+08,Wajir
+09,Mandera
+10,Marsabit
+11,Isiolo
+12,Meru
+13,Tharaka-Nithi
+14,Embu
+15,Kitui
+16,Machakos
+17,Makueni
+18,Nyandarua
+19,Nyeri
+20,Kirinyaga
+21,Murang'a
+22,Kiambu
+23,Turkana
+24,West Pokot
+25,Samburu
+26,Trans Nzoia
+27,Uasin Gishu
+28,Elgeyo-Marakwet
+29,Nandi
+30,Baringo
+31,Laikipia
+32,Nakuru
 33,Narok
-34,Nyamira
-35,Nyandarua
-36,Nyeri
-37,Samburu
-38,Siaya
-39,Taita-Taveta
-40,Tana River
-41,Tharaka-Nithi
-42,Trans Nzoia
-43,Turkana
-44,Uasin Gishu
-45,Vihiga
-46,West Pokot
-47,Wajir
+34,Kajiado
+35,Kericho
+36,Bomet
+37,Kakamega
+38,Vihiga
+39,Bungoma
+40,Busia
+41,Siaya
+42,Kisumu
+43,Homa Bay
+44,Migori
+45,Kisii
+46,Nyamira
+47,Nairobi

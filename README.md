@@ -29,14 +29,14 @@ The dataset comprises **6,158 total nodes** across 5 depth levels. This reposito
 
 ## Hierarchy Architecture & Dataset
 
-The administrative geography is deterministically seeded from official **Kenya National Bureau of Statistics (KNBS)** codes (`01 Baringo` to `47 Wajir`):
+The administrative geography is deterministically seeded from official **Kenya National Bureau of Statistics (KNBS)** codes (`01 Mombasa` to `47 Nairobi`):
 
 ```
                                 [Kenya] (Country, Code: KE)
                                    │
       ┌────────────────────────────┼────────────────────────────┐
       ▼                            ▼                            ▼
-[01 Baringo]                 [30 Nairobi]                  [47 Wajir]  (47 Counties)
+[01 Mombasa]                 [30 Baringo]                  [47 Nairobi]  (47 Counties)
       │                            │                            │
   (5 Sub-Counties)             (5 Sub-Counties)             (5 Sub-Counties) (235 Total)
       │                            │                            │

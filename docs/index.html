@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hierarchy Atlas — PostgreSQL 16 Hierarchical Data Modeling & Benchmark Suite</title>
+  <meta name="description" content="Production-grade PostgreSQL 16 reference implementation comparing Adjacency List, Nested Sets, Closure Table, and ltree across Kenya's 6,158-node administrative hierarchy.">
+  <meta name="theme-color" content="#070b13">
+  
+  <!-- Open Graph / Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Hierarchy Atlas — PostgreSQL 16 Hierarchical Benchmark Suite">
+  <meta property="og:description" content="Empirical benchmarks and architectural comparison of 4 classic tree modeling patterns in PostgreSQL 16 on Kenya's 47 counties geography.">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navigation Header -->
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a href="#" class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <rect x="2" y="17" width="6" height="4" rx="1"/>
+            <rect x="16" y="17" width="6" height="4" rx="1"/>
+            <path d="M12 7v4m0 0H5v6m7-6h7v6"/>
+          </svg>
+        </div>
+        <div class="brand-title">Hierarchy <span>Atlas</span></div>
+      </a>
+      
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#tree-explorer" class="nav-link">Tree Explorer</a></li>
+          <li><a href="#benchmarks" class="nav-link">Benchmarks</a></li>
+          <li><a href="#architecture" class="nav-link">Architecture</a></li>
+          <li><a href="#erd-schema" class="nav-link">DBeaver ERD</a></li>
+          <li><a href="#simulator" class="nav-link">Simulator</a></li>
+          <li><a href="#quickstart" class="nav-link">Quickstart</a></li>
+          <li>
+            <a href="https://github.com/crnjihia/hierarchy-atlas" target="_blank" rel="noopener noreferrer" class="btn-github">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+              GitHub
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-badge-wrap">
+        <span class="badge-pulse"></span>
+        <span>PostgreSQL 16 · 4 Models · Verified pgbench Suite</span>
+      </div>
+      
+      <h1 class="hero-title">
+        High-Performance <span class="gradient-text">Hierarchical Data</span><br>
+        Engineering in PostgreSQL
+      </h1>
+      
+      <p class="hero-subtitle">
+        An empirical benchmark and architectural analysis comparing <strong>Adjacency List</strong>, 
+        <strong>Nested Sets</strong>, <strong>Closure Table</strong>, and <strong>ltree</strong> 
+        across Kenya's administrative geography: <strong>6,158 nodes</strong> spanning 5 depth levels.
+      </p>
+      
+      <div class="hero-cta-group">
+        <a href="#tree-explorer" class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          Explore Kenya Hierarchy Tree
+        </a>
+        <a href="#benchmarks" class="btn-secondary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          View Benchmark Results
+        </a>
+      </div>
+      
+      <!-- HUD Metrics Ribbon -->
+      <div class="hud-grid">
+        <div class="hud-card" style="--card-accent: #10b981;">
+          <div class="hud-header">
+            <span class="hud-tag">Total Dataset</span>
+            <span class="hud-icon">🌍</span>
+          </div>
+          <div class="hud-val">6,158</div>
+          <div class="hud-desc">Nodes across 5 levels: Country → County → Sub → Ward → Village</div>
+        </div>
+
+        <div class="hud-card" style="--card-accent: #06b6d4;">
+          <div class="hud-header">
+            <span class="hud-tag">Subtree Read TPS</span>
+            <span class="hud-icon">⚡</span>
+          </div>
+          <div class="hud-val">4,388</div>
+          <div class="hud-desc"><strong>ltree GiST index</strong> (+73% faster than Adjacency List)</div>
+        </div>
+
+        <div class="hud-card" style="--card-accent: #38bdf8;">
+          <div class="hud-header">
+            <span class="hud-tag">Ancestor Lookup</span>
+            <span class="hud-icon">🚀</span>
+          </div>
+          <div class="hud-val">7,278</div>
+          <div class="hud-desc"><strong>ltree path @></strong> at 1.37 ms latency across 5 levels</div>
+        </div>
+
+        <div class="hud-card" style="--card-accent: #f59e0b;">
+          <div class="hud-header">
+            <span class="hud-tag">Subtree Move Gap</span>
+            <span class="hud-icon">⚖️</span>
+          </div>
+          <div class="hud-val">&gt;560x</div>
+          <div class="hud-desc">Adjacency List (685 TPS) vs Nested Sets write collapse (1.22 TPS)</div>
+        </div>
+
+        <div class="hud-card" style="--card-accent: #8b5cf6;">
+          <div class="hud-header">
+            <span class="hud-tag">Closure Storage</span>
+            <span class="hud-icon">💾</span>
+          </div>
+          <div class="hud-val">+60%</div>
+          <div class="hud-desc">29,000 transitive pairs consume +3.62 MB overhead</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 1: Interactive Kenya Hierarchy Tree Explorer -->
+  <section id="tree-explorer" class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Interactive Dataset Navigator</span>
+        <h2 class="section-title">Kenya Administrative Hierarchy Explorer</h2>
+        <p class="section-desc">
+          Select any of the 47 official <strong>Kenya National Bureau of Statistics (KNBS)</strong> counties 
+          to explore the deterministic 5-level tree, inspect live calculated properties, and preview native SQL query implementations across all 4 modeling patterns.
+        </p>
+      </div>
+
+      <div class="tree-explorer-card">
+        <div class="explorer-controls">
+          <div class="county-select-wrap">
+            <label for="county-select" class="select-label">Select County:</label>
+            <select id="county-select" class="select-dropdown">
+              <!-- Dynamically populated via JS -->
+            </select>
+          </div>
+
+          <div class="stats-badges-row">
+            <div class="stat-pill">Level 0: <strong>1 Country (Kenya)</strong></div>
+            <div class="stat-pill">Level 1: <strong>47 Counties</strong></div>
+            <div class="stat-pill">Level 2: <strong>235 Sub-Counties (5/county)</strong></div>
+            <div class="stat-pill">Level 3: <strong>1,175 Wards (5/sub)</strong></div>
+            <div class="stat-pill">Level 4: <strong>4,700 Villages (4/ward)</strong></div>
+          </div>
+        </div>
+
+        <div class="tree-explorer-layout">
+          <!-- Tree Viewer Panel -->
+          <div class="tree-panel">
+            <div class="tree-panel-title">
+              <span>Hierarchical Tree View</span>
+              <span style="font-size: 0.75rem; color: var(--accent-cyan);">Click any node to inspect</span>
+            </div>
+            <div id="tree-view-container">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+
+          <!-- Node Inspector Panel -->
+          <div class="node-inspector-panel">
+            <div class="inspector-header">
+              <h3 class="inspector-title" id="inspect-title">Nairobi (County)</h3>
+              <div class="inspector-breadcrumb" id="inspect-breadcrumb">Path: Kenya.Nairobi</div>
+            </div>
+
+            <div class="model-properties-grid">
+              <div class="property-box model-adj">
+                <div class="prop-title">
+                  <span>Adjacency List</span>
+                  <span style="color:#38bdf8;">Model 1</span>
+                </div>
+                <div class="prop-val" id="prop-adj">
+                  <strong>ID:</strong> 31<br>
+                  <strong>Parent ID:</strong> 1 (Kenya)<br>
+                  <strong>Level:</strong> County
+                </div>
+              </div>
+
+              <div class="property-box model-nested">
+                <div class="prop-title">
+                  <span>Nested Sets</span>
+                  <span style="color:#f59e0b;">Model 2</span>
+                </div>
+                <div class="prop-val" id="prop-nested">
+                  <strong>lft:</strong> 7,600 · <strong>rgt:</strong> 7,861<br>
+                  <strong>Span:</strong> 262 bounds<br>
+                  <strong>Subtree:</strong> 131 nodes
+                </div>
+              </div>
+
+              <div class="property-box model-closure">
+                <div class="prop-title">
+                  <span>Closure Table</span>
+                  <span style="color:#8b5cf6;">Model 3</span>
+                </div>
+                <div class="prop-val" id="prop-closure">
+                  <strong>Descendants:</strong> 131 transitive rows<br>
+                  <strong>Self-Depth:</strong> 0 (reflexive)<br>
+                  <strong>Storage:</strong> Composite PK
+                </div>
+              </div>
+
+              <div class="property-box model-ltree">
+                <div class="prop-title">
+                  <span>PostgreSQL ltree</span>
+                  <span style="color:#10b981;">Model 4</span>
+                </div>
+                <div class="prop-val" id="prop-ltree">
+                  <strong>Path:</strong> Kenya.Nairobi<br>
+                  <strong>nlevel:</strong> 2 labels<br>
+                  <strong>GiST:</strong> idx_regions_path_gist
+                </div>
+              </div>
+            </div>
+
+            <div class="sql-preview-box" id="inspect-sql-preview">
+-- Subtree Fetch in ltree (GiST Index):
+SELECT id, name, level, path 
+FROM regions 
+WHERE path &lt;@ 'Kenya.Nairobi';
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Benchmark Results & Analytics -->
+  <section id="benchmarks" class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Empirical pgbench Metrics</span>
+        <h2 class="section-title">Comparative Benchmark Analytics</h2>
+        <p class="section-desc">
+          Executed on PostgreSQL 16 with 10 concurrent clients, 2 worker threads, across the 6,158-node Kenya hierarchy dataset.
+          Observe the dramatic trade-offs between read acceleration, write overhead, and disk footprints.
+        </p>
+      </div>
+
+      <div class="benchmark-card">
+        <!-- Metric Selector Tabs -->
+        <div class="bench-tabs">
+          <button class="bench-tab-btn active" data-metric="subtree_read">Subtree Read (TPS)</button>
+          <button class="bench-tab-btn" data-metric="ancestor_lookup">Ancestor Lookup (TPS)</button>
+          <button class="bench-tab-btn" data-metric="move_subtree">Move Subtree (Write TPS)</button>
+          <button class="bench-tab-btn" data-metric="storage_overhead">Storage Overhead (kB)</button>
+        </div>
+
+        <!-- Dynamic Chart Area -->
+        <div class="chart-container">
+          <div style="margin-bottom: 0.5rem;">
+            <h3 id="bench-chart-title" style="font-size: 1.15rem; color: #fff;">Subtree Read Performance</h3>
+            <p id="bench-chart-desc" style="font-size: 0.85rem; color: var(--text-muted);">Throughput under 10 concurrent clients (Higher is better)</p>
+          </div>
+
+          <div id="chart-bars-wrap">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Comprehensive Data Table -->
+        <div class="table-responsive">
+          <table class="bench-table">
+            <thead>
+              <tr>
+                <th>Hierarchical Model</th>
+                <th>Subtree Read (TPS)</th>
+                <th>Subtree Latency</th>
+                <th>Ancestor TPS</th>
+                <th>Ancestor Latency</th>
+                <th>Move Write (TPS)</th>
+                <th>Move Latency</th>
+                <th>Storage Bloat</th>
+                <th>Query Complexity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <span class="model-badge">
+                    <span class="badge-dot dot-adj"></span>
+                    Adjacency List
+                  </span>
+                </td>
+                <td>2,532.63</td>
+                <td>3.948 ms</td>
+                <td>4,684.64</td>
+                <td>2.135 ms</td>
+                <td><strong>684.86</strong> <span class="win-badge">CHAMPION</span></td>
+                <td><strong>7.301 ms</strong></td>
+                <td><strong>0 kB (Baseline)</strong></td>
+                <td><code>WITH RECURSIVE</code> CTE</td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="model-badge">
+                    <span class="badge-dot dot-nested"></span>
+                    Nested Sets
+                  </span>
+                </td>
+                <td>3,672.41</td>
+                <td>2.723 ms</td>
+                <td>4,096.61</td>
+                <td>2.441 ms</td>
+                <td><strong>1.22</strong> <span class="alert-badge">COLLAPSE</span></td>
+                <td><strong>4,107.648 ms</strong></td>
+                <td>+384 kB (+6%)</td>
+                <td><code>BETWEEN lft AND rgt</code></td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="model-badge">
+                    <span class="badge-dot dot-closure"></span>
+                    Closure Table
+                  </span>
+                </td>
+                <td>2,654.32</td>
+                <td>3.767 ms</td>
+                <td>4,211.45</td>
+                <td>2.374 ms</td>
+                <td>249.80</td>
+                <td>20.016 ms</td>
+                <td><strong>+3,624 kB (+60%)</strong></td>
+                <td><code>JOIN region_closure</code></td>
+              </tr>
+              <tr>
+                <td>
+                  <span class="model-badge">
+                    <span class="badge-dot dot-ltree"></span>
+                    PostgreSQL ltree
+                  </span>
+                </td>
+                <td><strong>4,387.90</strong> <span class="win-badge">CHAMPION</span></td>
+                <td><strong>2.279 ms</strong></td>
+                <td><strong>7,278.00</strong> <span class="win-badge">CHAMPION</span></td>
+                <td><strong>1.374 ms</strong></td>
+                <td>20.74</td>
+                <td>230.802 ms</td>
+                <td>+1,152 kB (+19%)</td>
+                <td><code>path &lt;@ pattern</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Architectural Deep Dive -->
+  <section id="architecture" class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Core Technical Reference</span>
+        <h2 class="section-title">Architectural Implementations</h2>
+        <p class="section-desc">
+          Compare the mathematical foundation, DDL schemas, index configurations, and PostgreSQL execution plan behaviors for each model.
+        </p>
+      </div>
+
+      <div class="arch-grid">
+        <!-- Model 1: Adjacency List -->
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <h3 class="arch-card-title">
+              <span class="badge-dot dot-adj"></span>
+              1. Adjacency List
+            </h3>
+            <span class="arch-tag" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">sql/01_adjacency_list.sql</span>
+          </div>
+          <p class="arch-desc">
+            The canonical relational approach: each entity stores a nullable <code>parent_id</code> referencing the primary key of its direct parent.
+          </p>
+          <div class="code-snippet-wrap">
+            <button class="code-copy-btn">Copy</button>
+            <pre><code>-- Schema & Traversal Index
+CREATE TABLE regions (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    level TEXT NOT NULL,
+    code TEXT,
+    parent_id INT REFERENCES regions(id) ON DELETE CASCADE
+);
+CREATE INDEX idx_regions_parent_id ON regions(parent_id);
+
+-- Subtree Fetch: Recursive CTE
+WITH RECURSIVE subtree AS (
+    SELECT id, name, level, parent_id
+    FROM regions WHERE name = 'Nairobi'
+    UNION ALL
+    SELECT c.id, c.name, c.level, c.parent_id
+    FROM regions c JOIN subtree s ON c.parent_id = s.id
+)
+SELECT * FROM subtree;</code></pre>
+          </div>
+          <ul class="feature-list">
+            <li class="feature-item"><span class="icon">⚡</span> <strong>O(1) Writes:</strong> 685 TPS reparenting (single-row update).</li>
+            <li class="feature-item"><span class="icon">📦</span> <strong>Zero Bloat:</strong> 0 kB auxiliary table footprint.</li>
+            <li class="feature-item"><span class="icon">🔍</span> <strong>Buffers:</strong> 317 shared hits during 131-node recursive CTE scan.</li>
+          </ul>
+        </div>
+
+        <!-- Model 2: Nested Sets -->
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <h3 class="arch-card-title">
+              <span class="badge-dot dot-nested"></span>
+              2. Nested Sets
+            </h3>
+            <span class="arch-tag" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24;">sql/02_nested_sets.sql</span>
+          </div>
+          <p class="arch-desc">
+            Represents nodes as nested intervals (<code>lft</code>, <code>rgt</code>) assigned via depth-first search traversal, turning subtree reads into pure index range scans.
+          </p>
+          <div class="code-snippet-wrap">
+            <button class="code-copy-btn">Copy</button>
+            <pre><code>-- Bounds & Composite Index
+ALTER TABLE regions ADD COLUMN lft INT;
+ALTER TABLE regions ADD COLUMN rgt INT;
+CREATE INDEX idx_regions_lft_rgt ON regions(lft, rgt);
+
+-- Subtree Fetch: O(1) Range Scan
+SELECT c.id, c.name, c.level, c.lft, c.rgt
+FROM regions root
+JOIN regions c ON c.lft BETWEEN root.lft AND root.rgt
+WHERE root.name = 'Nairobi';</code></pre>
+          </div>
+          <ul class="feature-list">
+            <li class="feature-item"><span class="icon">🚀</span> <strong>Low Buffers:</strong> Only 25 shared hits (0.161 ms execution time).</li>
+            <li class="feature-item"><span class="icon">⚠️</span> <strong>Write Amplification:</strong> 1.22 TPS write collapse on reparenting.</li>
+            <li class="feature-item"><span class="icon">🔒</span> <strong>Global Locking:</strong> Interval shifts lock all 6,158 rows.</li>
+          </ul>
+        </div>
+
+        <!-- Model 3: Closure Table -->
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <h3 class="arch-card-title">
+              <span class="badge-dot dot-closure"></span>
+              3. Closure Table
+            </h3>
+            <span class="arch-tag" style="background: rgba(167, 139, 250, 0.15); color: #a78bfa;">sql/03_closure_table.sql</span>
+          </div>
+          <p class="arch-desc">
+            De-normalizes the entire hierarchy graph into an auxiliary transitive table recording every ancestor-descendant pair with depth distance.
+          </p>
+          <div class="code-snippet-wrap">
+            <button class="code-copy-btn">Copy</button>
+            <pre><code>-- Transitive Table & Indexing
+CREATE TABLE region_closure (
+    ancestor_id INT REFERENCES regions(id) ON DELETE CASCADE,
+    descendant_id INT REFERENCES regions(id) ON DELETE CASCADE,
+    depth INT NOT NULL,
+    PRIMARY KEY (ancestor_id, descendant_id)
+);
+CREATE INDEX idx_closure_anc ON region_closure(ancestor_id, depth);
+
+-- Subtree Fetch: Single Join
+SELECT r.id, r.name, r.level, c.depth
+FROM region_closure c
+JOIN regions r ON r.id = c.descendant_id
+WHERE c.ancestor_id = (SELECT id FROM regions WHERE name = 'Nairobi' LIMIT 1);</code></pre>
+          </div>
+          <ul class="feature-list">
+            <li class="feature-item"><span class="icon">🕸️</span> <strong>DAG Capable:</strong> Supports multiple parents per node.</li>
+            <li class="feature-item"><span class="icon">🐘</span> <strong>Heavy Bloat:</strong> 29,000 rows (+3.62 MB, +60% table size).</li>
+            <li class="feature-item"><span class="icon">📊</span> <strong>Buffers:</strong> 424 shared hits during subtree fetch.</li>
+          </ul>
+        </div>
+
+        <!-- Model 4: PostgreSQL ltree -->
+        <div class="arch-card">
+          <div class="arch-card-header">
+            <h3 class="arch-card-title">
+              <span class="badge-dot dot-ltree"></span>
+              4. PostgreSQL ltree
+            </h3>
+            <span class="arch-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">sql/04_ltree.sql</span>
+          </div>
+          <p class="arch-desc">
+            PostgreSQL native materialized label path extension with GiST index acceleration, regex-like matching, and depth functions.
+          </p>
+          <div class="code-snippet-wrap">
+            <button class="code-copy-btn">Copy</button>
+            <pre><code>-- Enable Extension & GiST Index
+CREATE EXTENSION IF NOT EXISTS ltree;
+ALTER TABLE regions ADD COLUMN path LTREE NOT NULL;
+CREATE INDEX idx_regions_path_gist ON regions USING GIST (path);
+
+-- Subtree Fetch: GiST Containment (&lt;@)
+SELECT id, name, level, path
+FROM regions
+WHERE path &lt;@ 'Kenya.Nairobi';
+
+-- Ancestor Lookup: Path Containment (@&gt;)
+SELECT id, name, level, path
+FROM regions
+WHERE path @&gt; 'Kenya.Nairobi.Sub_1.Ward_1.Village_1';</code></pre>
+          </div>
+          <ul class="feature-list">
+            <li class="feature-item"><span class="icon">👑</span> <strong>Read Champion:</strong> 4,388 TPS Subtree, 7,278 TPS Ancestor.</li>
+            <li class="feature-item"><span class="icon">🎯</span> <strong>Rich Operators:</strong> Wildcards (<code>Kenya.*.Ward_1</code>) and lquery.</li>
+            <li class="feature-item"><span class="icon">⚡</span> <strong>GiST Indexing:</strong> 109 buffer hits for 131 nodes (0.89 ms).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: DBeaver ERD Schema Showcase -->
+  <section id="erd-schema" class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Database Physical Model</span>
+        <h2 class="section-title">DBeaver Schema &amp; ER Diagram</h2>
+        <p class="section-desc">
+          Visual representation of the unified database catalog showing <code>regions</code> containing adjacency, nested sets, and ltree path columns alongside the transitive <code>region_closure</code> table.
+        </p>
+      </div>
+
+      <div class="erd-showcase-card">
+        <div class="erd-layout">
+          <!-- Clickable Image Frame -->
+          <div class="erd-image-frame" id="erd-image-trigger">
+            <img src="images/dbeaver_erd.png" alt="DBeaver Database Schema and ER Diagram for Hierarchy Atlas" loading="lazy">
+            <div class="erd-zoom-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <line x1="11" y1="8" x2="11" y2="14"/>
+                <line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+              Click to view high-res diagram
+            </div>
+          </div>
+
+          <!-- Annotated Schema Breakdown -->
+          <div class="erd-details">
+            <div class="erd-table-spec">
+              <div class="erd-table-title">
+                <span class="badge-dot dot-adj"></span>
+                <span>public.regions (6,158 rows)</span>
+              </div>
+              <p class="erd-table-desc">
+                Primary entity table hosting all 5 administrative tiers. Encapsulates <code>parent_id</code> (Adjacency), <code>lft</code> & <code>rgt</code> bounds (Nested Sets), and <code>path</code> (ltree extension) simultaneously on the identical dataset.
+              </p>
+            </div>
+
+            <div class="erd-table-spec">
+              <div class="erd-table-title">
+                <span class="badge-dot dot-closure"></span>
+                <span>public.region_closure (29,000 rows)</span>
+              </div>
+              <p class="erd-table-desc">
+                Transitive relationship table with composite primary key <code>(ancestor_id, descendant_id)</code> and depth metrics. Maintained via cascading foreign key triggers.
+              </p>
+            </div>
+
+            <div class="erd-table-spec">
+              <div class="erd-table-title">
+                <span class="badge-dot dot-ltree"></span>
+                <span>public.regions_adj_nairobi_subtree (View)</span>
+              </div>
+              <p class="erd-table-desc">
+                Convenience view wrapping the recursive CTE fetch for Nairobi county (returning exactly 131 descendant nodes) used in validation tests.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Interactive Query & Reparenting Simulator -->
+  <section id="simulator" class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Interactive SQL Mechanics</span>
+        <h2 class="section-title">Query &amp; Reparenting Simulator</h2>
+        <p class="section-desc">
+          Compare the exact statements, row locks, affected row volumes, and performance implications across models for real-world operations.
+        </p>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-selectors">
+          <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">Select Operation:</span>
+          <button class="sim-btn active" data-scenario="read_subtree">1. Fetch Nairobi Subtree (131 Nodes)</button>
+          <button class="sim-btn" data-scenario="ancestor_path">2. Climb Ancestors to Kenya (5 Levels)</button>
+          <button class="sim-btn" data-scenario="move_subtree">3. Move Sub-County (Subtree Reparenting)</button>
+        </div>
+
+        <div id="sim-grid-wrap" class="sim-display-grid">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Architectural Decision Matrix -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Engineering Trade-Offs</span>
+        <h2 class="section-title">Production Decision Matrix</h2>
+        <p class="section-desc">
+          How to select the right hierarchical modeling architecture for your application's read/write ratio and requirements.
+        </p>
+      </div>
+
+      <div class="decision-grid">
+        <div class="decision-card" style="--dec-color: #10b981;">
+          <h3 class="decision-title">PostgreSQL ltree</h3>
+          <div class="decision-subtitle">Read-Dominant &amp; Complex Search</div>
+          <ul class="decision-bullets">
+            <li>✓ Highest Subtree Read Throughput (4,388 TPS).</li>
+            <li>✓ Highest Ancestor Lookup (7,278 TPS).</li>
+            <li>✓ Native regex pattern matching &amp; lquery syntax.</li>
+            <li>✓ GiST indexing with balanced tree maintenance.</li>
+            <li>✗ Requires PostgreSQL extension (proprietary).</li>
+          </ul>
+        </div>
+
+        <div class="decision-card" style="--dec-color: #38bdf8;">
+          <h3 class="decision-title">Adjacency List</h3>
+          <div class="decision-subtitle">Write-Heavy &amp; Mutable Trees</div>
+          <ul class="decision-bullets">
+            <li>✓ Highest Write Throughput (685 TPS).</li>
+            <li>✓ Single-row O(1) pointer update for subtree moves.</li>
+            <li>✓ Zero storage overhead (0 kB bloat).</li>
+            <li>✓ 100% ANSI SQL standard compliant.</li>
+            <li>✗ Slower recursive CTE reads on deep hierarchies.</li>
+          </ul>
+        </div>
+
+        <div class="decision-card" style="--dec-color: #8b5cf6;">
+          <h3 class="decision-title">Closure Table</h3>
+          <div class="decision-subtitle">DAGs &amp; Multi-Parent Graphs</div>
+          <ul class="decision-bullets">
+            <li>✓ Supports Directed Acyclic Graphs (multiple parents).</li>
+            <li>✓ Portable across MySQL, SQLite, Oracle, PostgreSQL.</li>
+            <li>✓ Simple single-join queries without recursion.</li>
+            <li>✗ Heavy storage expansion: O(N · D) rows (+60% disk).</li>
+            <li>✗ Complex Cartesian joins when reparenting subtrees.</li>
+          </ul>
+        </div>
+
+        <div class="decision-card" style="--dec-color: #fbbf24;">
+          <h3 class="decision-title">Nested Sets</h3>
+          <div class="decision-subtitle">Static Read-Only Taxonomies</div>
+          <ul class="decision-bullets">
+            <li>✓ Fast O(1) subtree range reads (3,672 TPS).</li>
+            <li>✓ Lowest buffer hits (25 shared hits for 131 nodes).</li>
+            <li>✓ Standard ANSI SQL BETWEEN operators.</li>
+            <li>✗ Severe write collapse on reparenting (1.22 TPS).</li>
+            <li>✗ Table-locking boundary cascades on writes.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 7: Quickstart & Reproducibility Guide -->
+  <section id="quickstart" class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-tag">Reproducibility</span>
+        <h2 class="section-title">Docker Quickstart &amp; pgbench Guide</h2>
+        <p class="section-desc">
+          Reproduce the exact 6,158-node database migrations and benchmark suite from a clean checkout.
+        </p>
+      </div>
+
+      <div class="quickstart-card">
+        <div class="quickstart-steps">
+          <!-- Step 1 -->
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h4 class="step-title">Start PostgreSQL 16 Stack with Automated Migrations</h4>
+              <p class="step-desc">
+                Spins up the container on port <strong>5433</strong> and executes all 4 migration files (<code>sql/01_adjacency_list.sql</code> through <code>sql/04_ltree.sql</code>) during initdb:
+              </p>
+              <div class="code-snippet-wrap">
+                <button class="code-copy-btn">Copy</button>
+                <pre><code>docker compose up -d --wait</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h4 class="step-title">Verify Hierarchy Population &amp; Model Health</h4>
+              <p class="step-desc">
+                Confirm node counts across all 5 levels and transitive closure rows:
+              </p>
+              <div class="code-snippet-wrap">
+                <button class="code-copy-btn">Copy</button>
+                <pre><code>docker compose exec -T db psql -U dev -d hierarchy_atlas -c "SELECT level, count(*) FROM regions GROUP BY level ORDER BY min(id);"</code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h4 class="step-title">Run Automated Python pgbench Test Harness</h4>
+              <p class="step-desc">
+                Executes all 12 benchmark scripts across models and prints the formatted comparison matrix:
+              </p>
+              <div class="code-snippet-wrap">
+                <button class="code-copy-btn">Copy</button>
+                <pre><code>python benchmarks/run_benchmarks.py</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox Modal for DBeaver ERD -->
+  <div class="lightbox-modal" id="lightbox-modal">
+    <div class="lightbox-content">
+      <button class="lightbox-close-btn" id="lightbox-close">&times;</button>
+      <img src="images/dbeaver_erd.png" alt="DBeaver Schema Full Diagram" class="lightbox-img">
+      <div class="lightbox-caption">
+        Hierarchy Atlas — Physical PostgreSQL 16 schema in DBeaver showing <code>regions</code> and <code>region_closure</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-notice" id="toast-notice">Copied to clipboard!</div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-layout">
+        <div>
+          <div class="brand" style="margin-bottom: 0.5rem;">
+            <div class="brand-title">Hierarchy <span>Atlas</span></div>
+          </div>
+          <div class="footer-copy">
+            Production PostgreSQL 16 Hierarchical Modeling &amp; Benchmark Reference. Licensed under MIT.
+          </div>
+        </div>
+
+        <div class="footer-links">
+          <a href="https://github.com/crnjihia/hierarchy-atlas" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub Repository</a>
+          <a href="https://github.com/crnjihia/hierarchy-atlas/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" class="footer-link">MIT License</a>
+          <a href="https://github.com/crnjihia/hierarchy-atlas/actions" target="_blank" rel="noopener noreferrer" class="footer-link">CI Workflows</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>

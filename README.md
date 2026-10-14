@@ -2,6 +2,7 @@
 
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Showcase-06b6d4?logo=githubpages&logoColor=white)](https://crnjihia.github.io/hierarchy-atlas/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Benchmark](https://img.shields.io/badge/pgbench-Verified-success.svg)](benchmarks/)
 
